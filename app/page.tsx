@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import { FinanceChart } from "@/components/FinanceChart";
 import { GoalsPanel } from "@/components/GoalsPanel";
 import { ChecklistPanel } from "@/components/ChecklistPanel";
