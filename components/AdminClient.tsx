@@ -1,26 +1,270 @@
 "use client";
-import { useState, useTransition } from "react";
+
+import { useMemo, useState, useTransition } from "react";
 import type { Goal, Media, Month } from "@/lib/types";
-import { Save, Upload } from "lucide-react";
+import { ImagePlus, Music, Save, Trash2, UploadCloud } from "lucide-react";
 
-type Props = { settings: Record<string, string>; months: Month[]; goals: Goal[]; media: Media[] };
+type Props = {
+  settings: Record<string, string>;
+  months: Month[];
+  goals: Goal[];
+  media: Media[];
+};
 
-export function AdminClient({ settings, months, goals }: Props) {
+export function AdminClient({ settings, months, goals, media }: Props) {
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState("");
-  async function postJson(url: string, payload: unknown, success: string) {
-    startTransition(async () => { const res = await fetch(url, { method: "POST", body: JSON.stringify(payload) }); setMessage(res.ok ? success : "خطا رخ داد."); });
-  }
-  async function saveSettings(e: React.FormEvent<HTMLFormElement>) { e.preventDefault(); postJson("/api/settings", Object.fromEntries(new FormData(e.currentTarget).entries()), "تنظیمات ذخیره شد."); }
-  async function saveMonth(e: React.FormEvent<HTMLFormElement>) { e.preventDefault(); const data = Object.fromEntries(new FormData(e.currentTarget).entries()); postJson("/api/months", { id: data.id, month_title: data.month_title, income: Number(data.income || 0), expense: Number(data.expense || 0), investment: Number(data.investment || 0), note: data.note }, "ماه ذخیره شد."); }
-  async function saveGoal(e: React.FormEvent<HTMLFormElement>) { e.preventDefault(); const data = Object.fromEntries(new FormData(e.currentTarget).entries()); postJson("/api/goals/toggle", { id: data.id, title: data.title, current_amount: Number(data.current_amount || 0), target_amount: Number(data.target_amount || 0), mode: "edit" }, "هدف ذخیره شد."); }
-  async function upload(e: React.FormEvent<HTMLFormElement>) { e.preventDefault(); const form = new FormData(e.currentTarget); startTransition(async () => { const res = await fetch("/api/media/upload", { method: "POST", body: form }); setMessage(res.ok ? "فایل آپلود شد. صفحه را رفرش کن." : "خطا در آپلود فایل."); }); }
-  async function uploadSong(e: React.FormEvent<HTMLFormElement>) { e.preventDefault(); const form = new FormData(e.currentTarget); startTransition(async () => { const res = await fetch("/api/media/upload", { method: "POST", body: form }); setMessage(res.ok ? "آهنگ آپلود شد. صفحه را رفرش کن." : "خطا در آپلود آهنگ."); }); }
 
-  return <div className="mx-auto grid max-w-[1360px] gap-5 p-4 md:p-7"><section className="luxe-card p-7"><div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-sm font-black text-gold">Admin Panel</p><h1 className="mt-2 text-4xl font-black">تنظیمات کامل سایت</h1><p className="mt-3 text-sm font-bold text-stone-500">عنوان‌ها، مبالغ، ماه‌ها، عکس‌ها و آهنگ‌ها از اینجا مدیریت می‌شوند.</p></div><a href="/" className="luxe-button-soft">بازگشت به صفحه اصلی</a></div>{message && <div className="mt-5 rounded-2xl bg-emerald-50 p-4 font-bold text-emerald-700">{message}</div>}</section>
-  <section className="luxe-card p-6"><h2 className="mb-5 text-2xl font-black">تنظیمات کلی</h2><form onSubmit={saveSettings} className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"><Field name="site_title" label="عنوان سایت" defaultValue={settings.site_title}/><Field name="site_tagline" label="زیرعنوان" defaultValue={settings.site_tagline}/><Field name="hero_quote" label="متن هدر" defaultValue={settings.hero_quote}/><Field name="starting_cash" label="پول نقد شروع" defaultValue={settings.starting_cash} type="number"/><Field name="car_goal" label="هدف خودرو" defaultValue={settings.car_goal} type="number"/><Field name="trip_goal" label="هدف سفر" defaultValue={settings.trip_goal} type="number"/><Field name="fun_goal" label="هدف خوش‌گذرانی" defaultValue={settings.fun_goal} type="number"/><Field name="invest_goal" label="هدف سرمایه‌گذاری" defaultValue={settings.invest_goal} type="number"/><button disabled={pending} className="luxe-button md:col-span-2 xl:col-span-4"><Save className="ml-2 inline h-4 w-4"/>ذخیره تنظیمات</button></form></section>
-  <section className="luxe-card p-6"><h2 className="mb-5 text-2xl font-black">عکس‌های دونفره</h2><form onSubmit={upload} className="grid gap-4 md:grid-cols-[1fr_1fr_auto]"><input type="hidden" name="type" value="couple_photo"/><input className="luxe-input" type="file" name="file" accept="image/*" required/><input className="luxe-input" name="caption" placeholder="کپشن اختیاری"/><button disabled={pending} className="luxe-button"><Upload className="ml-2 inline h-4 w-4"/>آپلود</button></form></section>
-  <section className="luxe-card p-6"><h2 className="mb-5 text-2xl font-black">هدف‌ها</h2><div className="grid gap-4">{goals.map((g) => <form key={g.id} onSubmit={saveGoal} className="grid gap-4 md:grid-cols-4"><input type="hidden" name="id" value={g.id}/><Field name="title" label="عنوان هدف" defaultValue={g.title}/><Field name="current_amount" label="مقدار فعلی" defaultValue={String(g.current_amount)} type="number"/><Field name="target_amount" label="مقدار هدف" defaultValue={String(g.target_amount)} type="number"/><button className="luxe-button">ذخیره هدف</button></form>)}</div></section>
-  <section className="grid gap-5"><h2 className="px-2 text-2xl font-black">ماه‌ها</h2>{months.map((month) => <div key={month.id} className="luxe-card p-6"><form onSubmit={saveMonth} className="grid gap-4 md:grid-cols-2 xl:grid-cols-5"><input type="hidden" name="id" value={month.id}/><Field name="month_title" label="عنوان ماه" defaultValue={month.month_title}/><Field name="income" label="درآمد" defaultValue={String(month.income)} type="number"/><Field name="expense" label="خرج" defaultValue={String(month.expense)} type="number"/><Field name="investment" label="سرمایه‌گذاری" defaultValue={String(month.investment)} type="number"/><Field name="note" label="یادداشت" defaultValue={month.note}/><button className="luxe-button xl:col-span-5">ذخیره {month.month_title}</button></form><div className="mt-5 grid gap-4 md:grid-cols-2"><form onSubmit={upload} className="grid gap-3 rounded-3xl border border-stone-200 bg-white/60 p-4"><input type="hidden" name="type" value="month_photo"/><input type="hidden" name="month_id" value={month.id}/><label className="font-black">افزودن عکس ماه</label><input className="luxe-input" type="file" name="file" accept="image/*" required/><input className="luxe-input" name="caption" placeholder="کپشن"/><button className="luxe-button">آپلود عکس</button></form><form onSubmit={uploadSong} className="grid gap-3 rounded-3xl border border-stone-200 bg-white/60 p-4"><input type="hidden" name="type" value="month_song"/><input type="hidden" name="month_id" value={month.id}/><label className="font-black">آپلود آهنگ ماه</label><input className="luxe-input" type="file" name="file" accept="audio/*" required/><button className="luxe-button">آپلود آهنگ</button></form></div></div>)}</section></div>;
+  const couplePhotos = useMemo(
+    () => media.filter((m) => m.type === "couple_photo").sort((a, b) => a.sort_order - b.sort_order),
+    [media]
+  );
+
+  const monthPhotos = useMemo(
+    () => media.filter((m) => m.type === "month_photo").sort((a, b) => a.sort_order - b.sort_order),
+    [media]
+  );
+
+  const monthSongs = useMemo(
+    () => media.filter((m) => m.type === "month_song").sort((a, b) => a.sort_order - b.sort_order),
+    [media]
+  );
+
+  async function saveSettings(formData: FormData) {
+    const payload = Object.fromEntries(formData.entries());
+    startTransition(async () => {
+      const res = await fetch("/api/settings", { method: "POST", body: JSON.stringify(payload) });
+      setMessage(res.ok ? "تنظیمات ذخیره شد." : "خطا در ذخیره تنظیمات.");
+      if (res.ok) setTimeout(() => window.location.reload(), 700);
+    });
+  }
+
+  async function saveMonth(formData: FormData) {
+    const payload = Object.fromEntries(formData.entries());
+    startTransition(async () => {
+      const res = await fetch("/api/months", {
+        method: "POST",
+        body: JSON.stringify({
+          id: payload.id,
+          month_title: payload.month_title,
+          income: Number(payload.income || 0),
+          expense: Number(payload.expense || 0),
+          investment: Number(payload.investment || 0),
+          note: payload.note,
+        }),
+      });
+      setMessage(res.ok ? "اطلاعات ماه ذخیره شد." : "خطا در ذخیره ماه.");
+      if (res.ok) setTimeout(() => window.location.reload(), 700);
+    });
+  }
+
+  async function saveGoal(formData: FormData) {
+    const payload = Object.fromEntries(formData.entries());
+    startTransition(async () => {
+      const res = await fetch("/api/goals/update", {
+        method: "POST",
+        body: JSON.stringify({
+          id: payload.id,
+          title: payload.title,
+          current_amount: Number(payload.current_amount || 0),
+          target_amount: Number(payload.target_amount || 0),
+        }),
+      });
+      setMessage(res.ok ? "هدف ذخیره شد." : "خطا در ذخیره هدف.");
+      if (res.ok) setTimeout(() => window.location.reload(), 700);
+    });
+  }
+
+  async function upload(formData: FormData) {
+    startTransition(async () => {
+      const res = await fetch("/api/media/upload", { method: "POST", body: formData });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage(data.error || "خطا در آپلود فایل.");
+        return;
+      }
+      setMessage("فایل با موفقیت آپلود شد.");
+      setTimeout(() => window.location.reload(), 800);
+    });
+  }
+
+  async function deleteMedia(id: string) {
+    const ok = confirm("مطمئنی می‌خوای این فایل حذف بشه؟");
+    if (!ok) return;
+    startTransition(async () => {
+      const res = await fetch("/api/media/delete", { method: "POST", body: JSON.stringify({ id }) });
+      setMessage(res.ok ? "فایل حذف شد." : "خطا در حذف فایل.");
+      if (res.ok) setTimeout(() => window.location.reload(), 700);
+    });
+  }
+
+  return (
+    <div className="mx-auto grid max-w-[1360px] gap-5 p-4 md:p-7">
+      <section className="luxe-card p-7">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-black text-gold">Admin Panel</p>
+            <h1 className="mt-2 text-4xl font-black">پنل تنظیمات حرفه‌ای</h1>
+            <p className="mt-3 text-sm font-bold text-stone-500">مدیریت کامل عنوان‌ها، اعداد، عکس‌ها، گالری ماهانه و آهنگ‌ها.</p>
+          </div>
+          <a href="/" className="luxe-button-soft">بازگشت به صفحه اصلی</a>
+        </div>
+        {message && <div className="mt-5 rounded-2xl bg-emerald-50 p-4 font-bold text-emerald-700">{message}</div>}
+      </section>
+
+      <section className="luxe-card p-6">
+        <h2 className="mb-5 text-2xl font-black">تنظیمات کلی</h2>
+        <form action={saveSettings} className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Field name="site_title" label="عنوان سایت" defaultValue={settings.site_title} />
+          <Field name="site_tagline" label="زیرعنوان" defaultValue={settings.site_tagline} />
+          <Field name="hero_quote" label="متن عاشقانه هدر" defaultValue={settings.hero_quote} />
+          <Field name="starting_cash" label="پول نقد شروع" defaultValue={settings.starting_cash} type="number" />
+          <Field name="car_goal" label="هدف خودرو" defaultValue={settings.car_goal} type="number" />
+          <Field name="trip_goal" label="هدف سفر" defaultValue={settings.trip_goal} type="number" />
+          <Field name="fun_goal" label="هدف خوش‌گذرانی" defaultValue={settings.fun_goal} type="number" />
+          <Field name="invest_goal" label="هدف سرمایه‌گذاری" defaultValue={settings.invest_goal} type="number" />
+          <button disabled={pending} className="luxe-button md:col-span-2 xl:col-span-4">
+            <Save className="ml-2 inline h-4 w-4" /> ذخیره تنظیمات
+          </button>
+        </form>
+      </section>
+
+      <section className="luxe-card p-6">
+        <h2 className="mb-2 text-2xl font-black">عکس‌های دونفره هدر</h2>
+        <p className="mb-5 text-sm font-bold text-stone-500">دو عکس اول در صفحه اصلی نمایش داده می‌شوند. برای تغییر، عکس قبلی را حذف و عکس جدید اضافه کن.</p>
+        <form action={upload} className="grid gap-4 md:grid-cols-[1fr_1fr_120px_auto]">
+          <input type="hidden" name="type" value="couple_photo" />
+          <input className="luxe-input" type="file" name="file" accept="image/*" required />
+          <input className="luxe-input" name="caption" placeholder="کپشن اختیاری" />
+          <input className="luxe-input" name="sort_order" type="number" defaultValue="0" placeholder="ترتیب" />
+          <button disabled={pending} className="luxe-button"><UploadCloud className="ml-2 inline h-4 w-4" />آپلود</button>
+        </form>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {couplePhotos.length ? couplePhotos.map((item) => (
+            <MediaCard key={item.id} item={item} onDelete={() => deleteMedia(item.id)} />
+          )) : <EmptyMedia title="هنوز عکس دونفره‌ای آپلود نشده." />}
+        </div>
+      </section>
+
+      <section className="luxe-card p-6">
+        <h2 className="mb-5 text-2xl font-black">هدف‌ها</h2>
+        <div className="grid gap-4">
+          {goals.map((goal) => (
+            <form key={goal.id} action={saveGoal} className="grid gap-4 rounded-[1.7rem] border border-stone-200 bg-white/60 p-4 md:grid-cols-4">
+              <input type="hidden" name="id" value={goal.id} />
+              <Field name="title" label="عنوان هدف" defaultValue={goal.title} />
+              <Field name="current_amount" label="مقدار فعلی" defaultValue={String(goal.current_amount)} type="number" />
+              <Field name="target_amount" label="مقدار هدف" defaultValue={String(goal.target_amount)} type="number" />
+              <div className="grid items-end"><button disabled={pending} className="luxe-button">ذخیره هدف</button></div>
+            </form>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid gap-5">
+        <h2 className="px-2 text-2xl font-black">ماه‌ها، گالری و آهنگ</h2>
+        {months.map((month) => {
+          const photos = monthPhotos.filter((m) => m.month_id === month.id);
+          const songs = monthSongs.filter((m) => m.month_id === month.id);
+          return (
+            <div key={month.id} className="luxe-card p-6">
+              <h3 className="mb-5 text-2xl font-black">{month.month_title}</h3>
+              <form action={saveMonth} className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+                <input type="hidden" name="id" value={month.id} />
+                <Field name="month_title" label="عنوان ماه" defaultValue={month.month_title} />
+                <Field name="income" label="درآمد" defaultValue={String(month.income)} type="number" />
+                <Field name="expense" label="خرج" defaultValue={String(month.expense)} type="number" />
+                <Field name="investment" label="سرمایه‌گذاری" defaultValue={String(month.investment)} type="number" />
+                <Field name="note" label="یادداشت" defaultValue={month.note} />
+                <button disabled={pending} className="luxe-button xl:col-span-5">ذخیره اطلاعات {month.month_title}</button>
+              </form>
+
+              <div className="mt-6 grid gap-4 xl:grid-cols-2">
+                <div className="rounded-[1.7rem] border border-stone-200 bg-white/60 p-4">
+                  <div className="mb-4 flex items-center gap-2 font-black"><ImagePlus className="h-5 w-5 text-gold" /> افزودن عکس ماهانه</div>
+                  <form action={upload} className="grid gap-3">
+                    <input type="hidden" name="type" value="month_photo" />
+                    <input type="hidden" name="month_id" value={month.id} />
+                    <input className="luxe-input" type="file" name="file" accept="image/*" required />
+                    <input className="luxe-input" name="caption" placeholder="کپشن عکس" />
+                    <input className="luxe-input" name="sort_order" type="number" defaultValue="0" placeholder="ترتیب نمایش" />
+                    <button disabled={pending} className="luxe-button">آپلود عکس</button>
+                  </form>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {photos.length ? photos.map((item) => (
+                      <MediaCard key={item.id} item={item} onDelete={() => deleteMedia(item.id)} />
+                    )) : <EmptyMedia title="هنوز عکسی برای این ماه نیست." />}
+                  </div>
+                </div>
+
+                <div className="rounded-[1.7rem] border border-stone-200 bg-white/60 p-4">
+                  <div className="mb-4 flex items-center gap-2 font-black"><Music className="h-5 w-5 text-rose" /> آهنگ اختصاصی ماه</div>
+                  <form action={upload} className="grid gap-3">
+                    <input type="hidden" name="type" value="month_song" />
+                    <input type="hidden" name="month_id" value={month.id} />
+                    <input className="luxe-input" type="file" name="file" accept="audio/*" required />
+                    <input className="luxe-input" name="caption" placeholder="نام آهنگ / توضیح" />
+                    <input type="hidden" name="sort_order" value="0" />
+                    <button disabled={pending} className="luxe-button">آپلود / تغییر آهنگ</button>
+                  </form>
+                  <div className="mt-5 grid gap-3">
+                    {songs.length ? songs.map((item) => (
+                      <AudioCard key={item.id} item={item} onDelete={() => deleteMedia(item.id)} />
+                    )) : <EmptyMedia title="هنوز آهنگی برای این ماه نیست." />}
+                  </div>
+                  {month.song_url && (
+                    <div className="mt-4 rounded-2xl bg-white/70 p-4">
+                      <div className="mb-2 text-sm font-black text-stone-600">آهنگ فعال فعلی:</div>
+                      <audio controls className="w-full" src={month.song_url} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </section>
+    </div>
+  );
 }
-function Field({ name, label, defaultValue, type = "text" }: { name: string; label: string; defaultValue?: string; type?: string }) { return <label className="grid gap-2 text-sm font-black text-stone-600">{label}<input className="luxe-input" name={name} type={type} defaultValue={defaultValue || ""}/></label>; }
+
+function Field({ name, label, defaultValue, type = "text" }: { name: string; label: string; defaultValue?: string; type?: string }) {
+  return (
+    <label className="grid gap-2 text-sm font-black text-stone-600">
+      {label}
+      <input className="luxe-input" name={name} type={type} defaultValue={defaultValue || ""} />
+    </label>
+  );
+}
+
+function MediaCard({ item, onDelete }: { item: Media; onDelete: () => void }) {
+  return (
+    <div className="overflow-hidden rounded-[1.4rem] border border-stone-200 bg-white shadow-sm">
+      <div className="relative aspect-square overflow-hidden bg-stone-100">
+        <img src={item.url} alt={item.caption || "media"} className="h-full w-full object-cover" />
+      </div>
+      <div className="grid gap-2 p-3">
+        <div className="truncate text-xs font-bold text-stone-500">{item.caption || "بدون کپشن"}</div>
+        <button type="button" onClick={onDelete} className="rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-600 transition hover:bg-red-100">
+          <Trash2 className="ml-1 inline h-4 w-4" /> حذف
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AudioCard({ item, onDelete }: { item: Media; onDelete: () => void }) {
+  return (
+    <div className="rounded-[1.4rem] border border-stone-200 bg-white p-4 shadow-sm">
+      <div className="mb-3 text-sm font-black text-stone-700">{item.caption || "آهنگ ماه"}</div>
+      <audio controls className="w-full" src={item.url} />
+      <button type="button" onClick={onDelete} className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-600 transition hover:bg-red-100">
+        <Trash2 className="ml-1 inline h-4 w-4" /> حذف آهنگ
+      </button>
+    </div>
+  );
+}
+
+function EmptyMedia({ title }: { title: string }) {
+  return <div className="rounded-[1.4rem] border border-dashed border-stone-300 bg-white/50 p-6 text-center text-sm font-black text-stone-400">{title}</div>;
+}
