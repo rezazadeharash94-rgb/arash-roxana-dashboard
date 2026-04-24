@@ -1,21 +1,102 @@
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html { direction: rtl; }
+:root {
+  --cream: #fff8ef;
+  --champagne: #e8c98f;
+  --gold: #d6a75f;
+  --rose: #d98fa0;
+  --ink: #31241c;
+}
+
+html { direction: rtl; scroll-behavior: smooth; }
+
 body {
   margin: 0;
   font-family: Vazirmatn, system-ui, sans-serif;
-  color: #37291f;
+  color: var(--ink);
   min-height: 100vh;
   background:
-    radial-gradient(circle at 10% 8%, rgba(217,176,112,.22), transparent 26%),
-    radial-gradient(circle at 90% 12%, rgba(217,154,164,.20), transparent 28%),
-    radial-gradient(circle at 50% 100%, rgba(255,246,232,.96), transparent 46%),
-    linear-gradient(180deg, #fffaf4 0%, #fbf6ef 100%);
+    radial-gradient(circle at 8% 8%, rgba(232, 201, 143, .30), transparent 28%),
+    radial-gradient(circle at 90% 14%, rgba(217, 143, 160, .24), transparent 30%),
+    radial-gradient(circle at 55% 90%, rgba(255, 244, 225, .95), transparent 42%),
+    linear-gradient(180deg, #fffaf4 0%, #fbf1e8 55%, #fff8ef 100%);
 }
-.luxe-card { @apply rounded-[2rem] border border-white/60 bg-white/75 shadow-luxe backdrop-blur-xl; }
-.luxe-input { @apply w-full rounded-2xl border border-stone-200 bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/20; }
-.luxe-button { @apply rounded-2xl bg-gradient-to-l from-gold to-rose px-5 py-3 font-black text-stone-900 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-50; }
-.luxe-button-soft { @apply rounded-2xl border border-stone-200 bg-white/80 px-5 py-3 font-bold text-stone-700 transition hover:bg-white; }
+
+.luxe-card {
+  border: 1px solid rgba(255,255,255,.72);
+  background: rgba(255,255,255,.70);
+  box-shadow: 0 28px 80px rgba(101, 70, 45, .13);
+  border-radius: 34px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.luxe-card-strong {
+  border: 1px solid rgba(255,255,255,.82);
+  background: linear-gradient(145deg, rgba(255,255,255,.88), rgba(255,246,236,.74));
+  box-shadow: 0 28px 80px rgba(101, 70, 45, .15);
+  border-radius: 36px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.luxe-button {
+  border-radius: 20px;
+  background: linear-gradient(100deg, #e8c98f, #d98fa0);
+  padding: 13px 20px;
+  font-weight: 900;
+  color: #352315;
+  box-shadow: 0 14px 34px rgba(214, 167, 95, .26);
+  transition: all .25s ease;
+}
+
+.luxe-button:hover { transform: translateY(-2px); }
+
+.luxe-button-soft {
+  border-radius: 20px;
+  border: 1px solid rgba(130, 95, 60, .12);
+  background: rgba(255,255,255,.68);
+  padding: 13px 20px;
+  font-weight: 900;
+  color: #5b4635;
+}
+
+.luxe-input {
+  width: 100%;
+  border: 1px solid rgba(130, 95, 60, .16);
+  border-radius: 20px;
+  padding: 13px 15px;
+  background: rgba(255,255,255,.78);
+  outline: none;
+}
+
+.gold-text {
+  background: linear-gradient(90deg, #9f6e2f, #d6a75f, #b46f7b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.sparkle-bg { position: relative; overflow: hidden; }
+.sparkle-bg::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background:
+    radial-gradient(circle at 25% 25%, rgba(255,255,255,.65) 0 1px, transparent 2px),
+    radial-gradient(circle at 55% 35%, rgba(232,201,143,.5) 0 1px, transparent 2px),
+    radial-gradient(circle at 75% 70%, rgba(217,143,160,.45) 0 1px, transparent 2px);
+  background-size: 120px 120px;
+  opacity: .42;
+  animation: floatSparkles 18s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes floatSparkles {
+  from { transform: translate3d(0,0,0) rotate(0deg); }
+  to { transform: translate3d(50px,-40px,0) rotate(6deg); }
+}
